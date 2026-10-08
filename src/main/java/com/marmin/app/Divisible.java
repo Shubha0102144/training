@@ -3,7 +3,8 @@ package com.marmin.app;
  public class Divisible{
    
     boolean isDiv(int n){
-            return n%5==0;
+        int lastdigit=Math.abs(n%10);
+            return lastdigit==0 || lastdigit==5;
     }
 }
 

@@ -13,13 +13,13 @@ class DivisibilityTest {
 
 
    
-        Assertions.assertTrue(div.isDiv(5));
+        Assertions.assertTrue(div.isDiv(-5));
     
     
         Assertions.assertTrue(div.isDiv(0));
     
     
-       Assertions.assertTrue(div.isDiv(-5));
+       Assertions.assertTrue(div.isDiv(5));
     }
     
 }
