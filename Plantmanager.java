@@ -1,4 +1,4 @@
-package com.marmin.app;
+package com.marmin.app.Plantmanager;
 
 import java.util.*;
 
@@ -37,7 +37,11 @@ public class Plantmanager {
 class PlantCareService {
     ArrayList<Plantmanager> list = new ArrayList<>();
 
-    public String Addplant(Plantmanager p) {
+    public String addPlant(Plantmanager p) {
+        if (p == null) {
+            throw new IllegalArgumentException("plant cannot be null");
+
+        }
 
         for (Plantmanager plant : list) {
             if (plant.plantid.equals(p.plantid)) {
@@ -51,64 +55,86 @@ class PlantCareService {
 
     }
 
-    public void waterplant(String id) {
-        if (!list.contains(id)) {
+    public String waterPlant(String id) {
 
-            throw new IllegalArgumentException("plant with this id is not registered");
-        }
         for (Plantmanager p : list) {
 
             if (p.plantid.equals(id)) {
 
                 p.dayssincelastwatered = 0;
-                System.out.println("following plant watered" + p.display());
-                return;
+
+                return p.plantid + " " + getStatus(p);
 
             }
 
         }
+        throw new IllegalArgumentException("plant with this id is not registered");
 
     }
 
-    public int duelist() {
+    public void incrementdays() {
+        for (Plantmanager p : list) {
+            p.dayssincelastwatered++;
+        }
+    }
+
+    public String dueList() {
         int due = 0;
+        String result = "";
         for (Plantmanager p : list) {
             if (p.care.interval <= p.dayssincelastwatered) {
-                due = p.dayssincelastwatered - p.care.interval;
-                return due;
+                due += p.dayssincelastwatered - p.care.interval;
+                result += p.plantid + " " + "has" + " " + due + " " + "duedays";
+
+            } else {
+                result += p.plantid + " " + "is not on due";
             }
 
         }
-        return due;
+        if (result.isEmpty()) {
+            return "no plants in garden";
+
+        }
+        return result;
     }
 
     public void setCareInterval(String id, int careinterval) {
+        if (careinterval <= 0) {
+            throw new IllegalArgumentException("invalid careinterval");
+
+        }
         for (Plantmanager p : list) {
             if (p.plantid.equals(id)) {
                 p.care.interval = careinterval;
                 System.out.println(p.display());
+                return;
 
             }
-            throw new IllegalArgumentException("plant with this id does not exists");
         }
-
+        throw new IllegalArgumentException("plant with this id does not exists");
     }
 
     public String dueListClassification() {
+        String result = "";
+
         for (Plantmanager p : list) {
             if (p.care.interval == p.dayssincelastwatered) {
-                return p.plantid + "is on due";
+                result += p.plantid + "is on due";
             } else if (p.care.interval <= p.dayssincelastwatered) {
-                return p.plantid + "is on overdue";
+                result += p.plantid + "is on overdue\n";
             } else {
-                return p.plantid + "is not on due";
+                result += p.plantid + "is not on due\n";
             }
         }
-        throw new IllegalArgumentException("no plants in the garden");
+        if (result.isEmpty()) {
+            return "no plants in garden";
+
+        }
+        return result;
     }
 
-    public String plantdue() {
-        String result = " ";
+    public String plantDue() {
+        String result = "";
 
         for (Plantmanager p : list) {
             if (p.dayssincelastwatered >= p.care.interval) {
@@ -119,16 +145,114 @@ class PlantCareService {
             return "there is no plant with watering interval ellapsed";
 
         }
+        if (result.isEmpty()) {
+            return "no plants in garden";
+
+        }
         return result;
     }
 
-    public String list_all() {
-        String result = " ";
+    public String greenHouseOverview() {
+        int due = 0, overdue = 0, notyetdue = 0;
+        String result = "";
+        for (Plantmanager p : list) {
+            if (p.care.interval == p.dayssincelastwatered) {
+                due++;
+                result += "total no of due plant:" + due;
+            } else if (p.dayssincelastwatered > p.care.interval) {
+                overdue++;
+                result += "total no of overdue plants:" + overdue + "\n";
+            } else {
+                notyetdue++;
+                result += "total no of not yet due plnats:" + notyetdue + "\n";
+            }
+
+            result += "total no of plants:" + total_Number_Of_Plants();
+        }
+        if (result.isEmpty()) {
+            return "no plants in garden";
+
+        }
+        return result;
+    }
+
+    public String filterBySpecies(String species) {
+
+        if (species == null) {
+            throw new IllegalArgumentException("species cannot be null");
+        }
+        species = species.trim();
+        int count = 1;
+        String result = "";
+
+        for (Plantmanager p : list) {
+            if (species.equalsIgnoreCase(p.species.trim())) {
+                result += p.plantid + " " + species + " " + count++;
+            }
+        }
+        return result;
+    }
+
+    public String filterByCare(String status) {
+        status = status.trim();
+        String result = "";
+        int count = 1;
+        if (status == null || status.isBlank()) {
+            throw new IllegalArgumentException("staus cannot be empty or null");
+        }
+        if (!status.equalsIgnoreCase("due") && !status.equalsIgnoreCase("notyetdue")
+                && !status.equalsIgnoreCase("overdue")) {
+            throw new IllegalArgumentException("specified status is invalid");
+        }
+
+        for (Plantmanager p : list) {
+
+            if (status.equalsIgnoreCase(getStatus(p).trim())) {
+                result += p.plantid + " " + status + " " + count++;
+
+            }
+        }
+        return result;
+    }
+
+    public String getStatus(Plantmanager p) {
+
+        if (p.care.interval == p.dayssincelastwatered) {
+            return "due";
+        } else if (p.dayssincelastwatered > p.care.interval) {
+            return "overdue";
+        }
+
+        return "notyetdue";
+
+    }
+
+    public String moveStatus() {
+        String status = "";
+        for (Plantmanager p : list) {
+            if (p.dayssincelastwatered == 0 || p.dayssincelastwatered < p.care.interval) {
+                status += "no-due";
+
+            } else if (p.dayssincelastwatered == p.care.interval) {
+                status += "due";
+            } else {
+                status += "overdue";
+            }
+        }
+        return status;
+    }
+
+    public String list_All() {
+        String result = "";
         for (Plantmanager p : list) {
             result += p.display() + "\n";
         }
         if (result.isEmpty()) {
             return "there is no plant in garden";
+
+        }
+        if (result.isEmpty()) {
+            return "no plants in garden";
 
         }
         return result;
@@ -147,7 +271,7 @@ class PlantCareService {
 
     }
 
-    public int total_no_of_plants() {
+    public int total_Number_Of_Plants() {
         return list.size();
     }
 
